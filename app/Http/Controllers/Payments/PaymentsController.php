@@ -6,6 +6,7 @@ use App\Http\Controllers\Core\Controller;
 use App\Models\Core\Setting;
 use App\Models\Core\User;
 use App\Models\Payments\CreditsPlan;
+use App\Models\Payments\UserBillable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use PHPUnit\Exception;
@@ -23,7 +24,9 @@ class PaymentsController extends Controller
 
     public function billingPortal(Request $request) {
         if(!is_null(\Illuminate\Support\Facades\Auth::user())) {
-            return \Illuminate\Support\Facades\Auth::user()->billingPortalUrl();
+            $user = Auth::user();
+            $user = UserBillable::find($user->id);
+            return $user->billingPortalUrl();
         } else {
             return 'User not logged';
         }
@@ -32,15 +35,17 @@ class PaymentsController extends Controller
     public function buy(Request $request) {
         if(!is_null(\Illuminate\Support\Facades\Auth::user())) {
             try {
-                $stripeCustomer = Auth::user()->createOrGetStripeCustomer();
-                $stripeCustomer = Auth::user()->updateStripeCustomer(['email' => Auth::user()->email]);
-                Auth::user()->syncStripeCustomerDetails();
+                $user = Auth::user();
+                $user = UserBillable::find($user->id);
+                $stripeCustomer = $user->createOrGetStripeCustomer();
+                $stripeCustomer = $user->updateStripeCustomer(['email' => $user->email]);
+                $user->syncStripeCustomerDetails();
             }catch (Exception $e) {
             }
             if(!is_null($request->query->get('product'))) {
-                return response(\Illuminate\Support\Facades\Auth::user()->checkout($request->query->get('product'),
-                    [ 'success_url' => route('checkout-success')."?session_id={CHECKOUT_SESSION_ID}&user_id=".Auth::user()->id,
-                        'cancel_url' => route('checkout-cancel')."?session_id={CHECKOUT_SESSION_ID}&user_id=".Auth::user()->id,
+                return response($user->checkout($request->query->get('product'),
+                    [ 'success_url' => route('checkout-success')."?session_id={CHECKOUT_SESSION_ID}&user_id=".$user->id,
+                        'cancel_url' => route('checkout-cancel')."?session_id={CHECKOUT_SESSION_ID}&user_id=".$user->id,
                         'invoice_creation' => ['enabled' => true],
                         'allow_promotion_codes' => true])
                     ->toJson());
