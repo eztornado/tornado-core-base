@@ -13,6 +13,7 @@ class UserBillable extends User
 {
     use HasApiTokens, HasFactory, Notifiable, Billable;
 
+    protected $table = 'users';
     protected $appends = ['hasPaymentMethod'];
 
     public function getHasPaymentMethodAttribute() : bool {
