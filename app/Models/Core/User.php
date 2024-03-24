@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
 use Laravel\Sanctum\HasApiTokens;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
+use TCG\Voyager\Facades\Voyager;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -78,5 +79,17 @@ class User extends Authenticatable implements JWTSubject
     public function role()
     {
         return $this->belongsTo(\TCG\Voyager\Models\Role::class,'role_id');
+    }
+
+    public function setRole($name)
+    {
+        $role = Voyager::model('Role')->where('name', '=', $name)->first();
+
+        if ($role) {
+            $this->role()->associate($role);
+            $this->save();
+        }
+
+        return $this;
     }
 }
