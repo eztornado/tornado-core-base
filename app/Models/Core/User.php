@@ -7,14 +7,13 @@ use App\Traits\Observable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Cashier\Billable;
 use Laravel\Sanctum\HasApiTokens;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
-use TCG\Voyager\Facades\Voyager;
+use TCG\Voyager\Traits\VoyagerUser;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, VoyagerUser;
 
     /**
      * The attributes that are mass assignable.
@@ -76,20 +75,5 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Session::class,'users_id');
     }
-    public function role()
-    {
-        return $this->belongsTo(\TCG\Voyager\Models\Role::class,'role_id');
-    }
 
-    public function setRole($name)
-    {
-        $role = Voyager::model('Role')->where('name', '=', $name)->first();
-
-        if ($role) {
-            $this->role()->associate($role);
-            $this->save();
-        }
-
-        return $this;
-    }
 }
