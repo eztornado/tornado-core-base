@@ -10,9 +10,8 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
 use Laravel\Sanctum\HasApiTokens;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
-use TCG\Voyager\Models\User as VoyagerUser;
 
-class User extends VoyagerUser implements JWTSubject
+class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -21,7 +20,35 @@ class User extends VoyagerUser implements JWTSubject
      *
      * @var array<int, string>
      */
-    
+
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'active',
+        'role_id',
+        'settings'
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'active' => 'boolean'
+    ];
 
     // Rest omitted for brevity
     /**
@@ -48,5 +75,8 @@ class User extends VoyagerUser implements JWTSubject
     {
         return $this->hasMany(Session::class,'users_id');
     }
-
+    public function role()
+    {
+        return $this->belongsTo(\TCG\Voyager\Models\Role::class,'role_id');
+    }
 }
